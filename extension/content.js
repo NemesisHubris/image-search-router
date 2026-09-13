@@ -1,184 +1,172 @@
 (() => {
   "use strict";
 
-  // Only change the top search tabs. Image thumbnails and result links stay intact.
-  const searchTabSelector = "#primary-tabs a[href]";
-  const linkTitle = "Search images with your chosen engine (opens in a new tab)";
+  const source = ImageSearch.engineForHost(window.location.hostname);
+  if (!source) {
+    return;
+  }
 
-  // Remember the original attributes so switching off requires no page reload.
-  const originalLinks = new WeakMap();
-  let settings = { ...ImageSearch.defaults, enabled: false };
-  const changedSettings = new Set();
+  const linkTitle = "Open images with your chosen engine in a new tab";
+  const managedControls = new Map();
+  let settings = null;
+  let settingsRevision = 0;
+  let scanScheduled = false;
 
-  function restoreAttribute(link, name, originalValue, extensionValue) {
-    // Preserve any attribute Brave has changed since we last touched the link.
-    if (link.getAttribute(name) !== extensionValue) {
+  function restoreAttribute(control, name, originalValue, extensionValue) {
+    if (control.getAttribute(name) !== extensionValue) {
       return;
     }
-
     if (originalValue === null) {
-      link.removeAttribute(name);
+      control.removeAttribute(name);
     } else {
-      link.setAttribute(name, originalValue);
+      control.setAttribute(name, originalValue);
     }
   }
 
-  function restoreBraveLink(link) {
-    const original = originalLinks.get(link);
-
+  function restoreControl(control) {
+    const original = managedControls.get(control);
     if (!original) {
       return;
     }
-
-    restoreAttribute(link, "href", original.href, original.destinationHref);
-    restoreAttribute(link, "target", original.target, "_blank");
-    restoreAttribute(link, "rel", original.rel, "noopener noreferrer");
-    restoreAttribute(link, "title", original.title, linkTitle);
-    originalLinks.delete(link);
+    restoreAttribute(control, "href", original.href, original.destination);
+    restoreAttribute(control, "target", original.target, "_blank");
+    restoreAttribute(control, "rel", original.rel, "noopener noreferrer");
+    restoreAttribute(control, "title", original.title, linkTitle);
+    managedControls.delete(control);
   }
 
-  function useSelectedEngine(link) {
-    if (!settings.enabled) {
-      restoreBraveLink(link);
+  function updateControl(control) {
+    const destinationId = settings?.routes[source.id];
+    if (!settings?.enabled || !destinationId || destinationId === source.id) {
+      restoreControl(control);
       return;
     }
 
-    const previous = originalLinks.get(link);
+    const previous = managedControls.get(control);
+    const stillOurLink = previous && control.getAttribute("href") === previous.destination;
+    const originalHref = stillOurLink ? previous.href : control.getAttribute("href");
 
-    if (previous && link.href === previous.destinationHref) {
+    if (!ImageSources.isImageControl(control, source, originalHref)) {
+      restoreControl(control);
       return;
     }
 
-    const braveUrl = new URL(link.href);
-
-    if (braveUrl.origin !== "https://search.brave.com") {
-      restoreBraveLink(link);
-      return;
-    }
-
-    if (braveUrl.pathname !== "/images") {
-      restoreBraveLink(link);
-      return;
-    }
-
-    // Prefer the link's query, because Brave updates it after a new search.
-    const currentPageUrl = new URL(window.location.href);
-    const query = braveUrl.searchParams.get("q") ?? currentPageUrl.searchParams.get("q");
-
+    const query = ImageSources.queryFor(control, source, originalHref);
     if (!query || !query.trim()) {
-      restoreBraveLink(link);
+      restoreControl(control);
       return;
     }
 
     let destination;
-
     try {
-      destination = ImageSearch.destinationFor(query, settings);
+      destination = ImageSearch.destinationFor(query, destinationId, settings);
     } catch {
-      restoreBraveLink(link);
+      restoreControl(control);
+      return;
+    }
+    if (!destination) {
+      restoreControl(control);
+      return;
+    }
+    if (previous && previous.destination === destination && (stillOurLink || !control.matches('a'))) {
       return;
     }
 
-    // When Brave updates the query on an existing link, save the new Brave URL
-    // while retaining the original target, rel, and title attributes.
-    const original = previous ?? {
-      target: link.getAttribute("target"),
-      rel: link.getAttribute("rel"),
-      title: link.getAttribute("title")
+    const original = previous || {
+      href: control.getAttribute("href"),
+      target: control.getAttribute("target"),
+      rel: control.getAttribute("rel"),
+      title: control.getAttribute("title")
     };
-    original.href = link.getAttribute("href");
-    original.destinationHref = destination;
-    originalLinks.set(link, original);
+    original.href = originalHref;
+    original.destination = destination;
+    managedControls.set(control, original);
 
-    link.href = destination;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    link.title = linkTitle;
+    if (control.matches('a')) {
+      control.href = destination;
+      control.target = "_blank";
+      control.rel = "noopener noreferrer";
+    }
+    control.title = linkTitle;
   }
 
-  function updateSearchTabs() {
-    const searchTabs = document.querySelectorAll(searchTabSelector);
-
-    for (const link of searchTabs) {
-      useSelectedEngine(link);
+  function updateControls() {
+    scanScheduled = false;
+    for (const control of managedControls.keys()) {
+      if (!control.isConnected) {
+        restoreControl(control);
+      }
+    }
+    for (const control of document.querySelectorAll(ImageSources.controlSelector)) {
+      updateControl(control);
     }
   }
 
-  function keepNativeTabOpening(event) {
-    if (!settings.enabled) {
-      return;
+  function scheduleScan() {
+    if (!scanScheduled) {
+      scanScheduled = true;
+      requestAnimationFrame(updateControls);
     }
+  }
 
+  function openImages(event) {
     if (!(event.target instanceof Element)) {
       return;
     }
-
-    const link = event.target.closest(searchTabSelector);
-
-    if (!link) {
+    if (event.type === 'auxclick' && event.button !== 1) {
+      return;
+    }
+    const control = event.target.closest(ImageSources.controlSelector);
+    if (!control) {
       return;
     }
 
-    // Handle a click even if Brave has just replaced the link.
-    useSelectedEngine(link);
-    const original = originalLinks.get(link);
-
-    if (!original || link.href !== original.destinationHref) {
+    // Recheck at click time, including links inserted just before the click.
+    updateControl(control);
+    const original = managedControls.get(control);
+    if (!original) {
       return;
     }
-
-    // Stop Brave's page router from navigating the original tab.
-    // Keep the browser's default action for clicks, Enter, and middle clicks.
     event.stopImmediatePropagation();
+
+    if (!control.matches('a')) {
+      event.preventDefault();
+      window.open(original.destination, '_blank', 'noopener,noreferrer');
+    }
+    // Anchors keep native Enter, middle-click, and modifier-key behavior.
   }
 
-  window.addEventListener("click", keepNativeTabOpening, true);
-  window.addEventListener("auxclick", keepNativeTabOpening, true);
+  async function refreshSettings() {
+    const revision = ++settingsRevision;
+    try {
+      const saved = await chrome.storage.local.get(null);
+      if (revision !== settingsRevision) {
+        return;
+      }
+      for (const control of managedControls.keys()) {
+        restoreControl(control);
+      }
+      settings = ImageSearch.normalizeSettings(saved);
+      updateControls();
+    } catch (error) {
+      console.warn("Image Search Router could not read its settings.", error);
+    }
+  }
 
-  // Brave can replace its navigation without loading a new document.
-  // Watching href changes also catches searches that reuse the same link.
-  const observer = new MutationObserver(updateSearchTabs);
+  window.addEventListener('click', openImages, true);
+  window.addEventListener('auxclick', openImages, true);
+  window.addEventListener('popstate', scheduleScan);
+  const observer = new MutationObserver(scheduleScan);
   observer.observe(document, {
     childList: true,
     subtree: true,
     attributes: true,
-    attributeFilter: ["href"]
+    attributeFilter: ['href', 'aria-label', 'value']
   });
-
-  chrome.storage.onChanged.addListener((changes, areaName) => {
-    if (areaName !== "local") {
-      return;
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local') {
+      refreshSettings();
     }
-
-    const changedKeys = Object.keys(ImageSearch.defaults).filter((key) => key in changes);
-
-    if (changedKeys.length === 0) {
-      return;
-    }
-
-    // Restore the saved Brave URLs before applying a different engine.
-    for (const link of document.querySelectorAll(searchTabSelector)) {
-      restoreBraveLink(link);
-    }
-
-    for (const key of changedKeys) {
-      changedSettings.add(key);
-      settings[key] = changes[key].newValue ?? ImageSearch.defaults[key];
-    }
-
-    updateSearchTabs();
   });
-
-  chrome.storage.local.get(ImageSearch.defaults).then((savedSettings) => {
-    // A toggle made during startup takes priority over this initial read.
-    for (const key of Object.keys(ImageSearch.defaults)) {
-      if (!changedSettings.has(key)) {
-        settings[key] = savedSettings[key];
-      }
-    }
-
-    updateSearchTabs();
-  }).catch((error) => {
-    console.warn("Image Search could not read its settings.", error);
-  });
+  refreshSettings();
 })();

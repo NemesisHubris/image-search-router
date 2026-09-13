@@ -1,9 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "Image Search for Brave",
-  "version": "1.2.0",
-  "description": "Use Google, Bing, DuckDuckGo, or your own image search engine from Brave Search. Opens in a new tab.",
-  "permissions": ["storage"],
+  "name": "Image Search Router",
+  "version": "2.0.0",
+  "description": "Choose a different image search engine for each search site. Save multiple routes and custom image engines.",
+  "permissions": [
+    "storage"
+  ],
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",
@@ -11,7 +13,7 @@
     "128": "icons/icon-128.png"
   },
   "action": {
-    "default_title": "Image Search for Brave",
+    "default_title": "Image Search Router",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon-16.png",
@@ -20,8 +22,40 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://search.brave.com/*"],
-      "js": ["engines.js", "content.js"],
+      "matches": [
+        "https://search.brave.com/*",
+        "https://google.com/*",
+        "https://www.google.com/*",
+        "https://images.google.com/*",
+        "https://bing.com/*",
+        "https://www.bing.com/*",
+        "https://duckduckgo.com/*",
+        "https://www.duckduckgo.com/*",
+        "https://html.duckduckgo.com/*",
+        "https://noai.duckduckgo.com/*",
+        "https://search.yahoo.com/*",
+        "https://images.search.yahoo.com/*",
+        "https://yandex.com/*",
+        "https://www.yandex.com/*",
+        "https://yandex.ru/*",
+        "https://www.yandex.ru/*",
+        "https://startpage.com/*",
+        "https://www.startpage.com/*",
+        "https://ecosia.org/*",
+        "https://www.ecosia.org/*",
+        "https://qwant.com/*",
+        "https://www.qwant.com/*",
+        "https://mojeek.com/*",
+        "https://www.mojeek.com/*",
+        "https://www.mojeek.co.uk/*",
+        "https://kagi.com/*",
+        "https://www.kagi.com/*"
+      ],
+      "js": [
+        "engines.js",
+        "sources.js",
+        "content.js"
+      ],
       "run_at": "document_start"
     }
   ]

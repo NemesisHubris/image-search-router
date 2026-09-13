@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Image Search for Brave</title>
+    <title>Image Search Router</title>
     <link rel="stylesheet" href="popup.css">
     <script src="engines.js" defer></script>
     <script src="popup.js" defer></script>
@@ -12,28 +12,34 @@
     <header>
       <img src="icons/icon.svg" width="40" height="40" alt="">
       <div>
-        <h1>Image Search</h1>
-        <p>for Brave Search</p>
+        <h1>Image Search Router</h1>
+        <p>Your search. Your image engine.</p>
       </div>
     </header>
     <main>
       <label class="toggle-row">
-        <span>Use another engine</span>
+        <span>Enable routing</span>
         <input id="enabled" type="checkbox" role="switch" aria-describedby="status" disabled>
         <span class="switch-track" aria-hidden="true"></span>
       </label>
-      <p id="status" role="status">Loading your setting…</p>
-      <div class="engine-choice">
-        <label for="engine">Image search engine</label>
-        <select id="engine" disabled></select>
+      <p id="status" role="status">Loading your choices…</p>
+      <div class="column-labels" aria-hidden="true">
+        <span>When searching on</span><span>Open images with</span>
       </div>
-      <form id="custom-form" hidden novalidate>
-        <label for="custom-url">Your search URL</label>
-        <input id="custom-url" type="url" placeholder="https://example.com/images?q={query}"
-          aria-describedby="custom-help error" autocomplete="off" spellcheck="false">
-        <p id="custom-help">Use <code>{query}</code> where the search words go.</p>
-        <button type="submit">Save engine</button>
-      </form>
+      <div id="routes" aria-label="Image search destinations"></div>
+      <details id="custom-section">
+        <summary>Custom image engines</summary>
+        <ul id="custom-engines"></ul>
+        <form id="custom-form" novalidate>
+          <label for="custom-name">Name</label>
+          <input id="custom-name" type="text" maxlength="40" placeholder="My image search" required>
+          <label for="custom-url">Image search URL</label>
+          <input id="custom-url" type="url" placeholder="https://example.com/images?q={query}"
+            aria-describedby="custom-help error" autocomplete="off" spellcheck="false" required>
+          <p id="custom-help">Put <code>{query}</code> where the search words go.</p>
+          <button type="submit">Add engine</button>
+        </form>
+      </details>
       <p id="error" role="alert" hidden></p>
     </main>
   </body>
