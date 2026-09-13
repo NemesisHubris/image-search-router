@@ -122,5 +122,75 @@ const ImageSearch = (() => {
     return new URL(template.replaceAll("{query}", encodedQuery)).href;
   }
 
-  return { engines, engineForHost, normalizeSettings, validateCustomUrl, destinationFor };
+  // A template match tolerates extra tracking parameters, but requires the
+  // engine's fixed parameters (for example categories=images) to stay intact.
+  function queryFromTemplate(address, template) {
+    const marker = "image-search-placeholder";
+    const pattern = new URL(template.replaceAll("{query}", marker));
+    const actual = new URL(address);
+    if (actual.origin !== pattern.origin) {
+      return null;
+    }
+
+    function matchPart(value, expected) {
+      // Match URL punctuation literally; only the query placeholder can vary.
+      const escaped = expected.split(marker).map((part) => {
+        return part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      });
+      return value.match(new RegExp(`^${escaped.join("(.*?)")}$`));
+    }
+
+    const pathMatch = matchPart(actual.pathname, pattern.pathname);
+    if (!pathMatch) {
+      return null;
+    }
+    let query = null;
+    if (pattern.pathname.includes(marker)) {
+      try {
+        query = decodeURIComponent(pathMatch[1]);
+      } catch {
+        return null;
+      }
+    }
+    for (const [key, expected] of pattern.searchParams) {
+      const value = actual.searchParams.get(key);
+      if (value === null) {
+        return null;
+      }
+      const match = matchPart(value, expected);
+      if (!match) {
+        return null;
+      }
+      if (expected.includes(marker)) {
+        query = match[1];
+      }
+    }
+    return query;
+  }
+
+  function customSourceFor(address, settings) {
+    return settings.customEngines.find((engine) => {
+      if (!engine.sourceUrl || !settings.routes[engine.id]) {
+        return false;
+      }
+      return queryFromTemplate(address, engine.sourceUrl) !== null
+        || queryFromTemplate(address, engine.url) !== null;
+    });
+  }
+
+  function sourceOrigin(engine) {
+    const url = new URL(engine.sourceUrl.replaceAll("{query}", "example"));
+    return `${url.protocol}//${url.hostname}/*`;
+  }
+
+  return {
+    engines,
+    engineForHost,
+    normalizeSettings,
+    validateCustomUrl,
+    destinationFor,
+    queryFromTemplate,
+    customSourceFor,
+    sourceOrigin
+  };
 })();

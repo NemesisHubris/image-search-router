@@ -19,6 +19,9 @@ const ImageSources = (() => {
   };
 
   function isImageUrl(url, source) {
+    if (source.sourceUrl) {
+      return ImageSearch.queryFromTemplate(url.href, source.url) !== null;
+    }
     const linkedEngine = ImageSearch.engineForHost(url.hostname);
     if (!linkedEngine || linkedEngine.id !== source.id) {
       return false;
@@ -43,7 +46,7 @@ const ImageSources = (() => {
   }
 
   function isImageControl(control, source, originalHref) {
-    const directSelector = directSelectors[source.id];
+    const directSelector = source.selector || directSelectors[source.id];
     if (directSelector && control.matches(directSelector)) {
       return true;
     }
@@ -64,6 +67,17 @@ const ImageSources = (() => {
   }
 
   function queryFor(control, source, originalHref) {
+    if (source.sourceUrl) {
+      if (control.matches('a[href]')) {
+        const address = new URL(originalHref || control.href, window.location.href);
+        const linkedQuery = ImageSearch.queryFromTemplate(address.href, source.url);
+        if (linkedQuery !== null) {
+          return linkedQuery;
+        }
+      }
+      return ImageSearch.queryFromTemplate(window.location.href, source.sourceUrl)
+        ?? ImageSearch.queryFromTemplate(window.location.href, source.url);
+    }
     if (control.matches('a[href]')) {
       const url = new URL(originalHref || control.href, window.location.href);
       const query = url.searchParams.get(source.queryKey);

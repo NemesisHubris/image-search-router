@@ -1,10 +1,7 @@
 (() => {
   "use strict";
 
-  const source = ImageSearch.engineForHost(window.location.hostname);
-  if (!source) {
-    return;
-  }
+  let source = null;
 
   const linkTitle = "Open images with your chosen engine in a new tab";
   const managedControls = new Map();
@@ -36,8 +33,8 @@
   }
 
   function updateControl(control) {
-    const destinationId = settings?.routes[source.id];
-    if (!settings?.enabled || !destinationId || destinationId === source.id) {
+    const destinationId = source && settings?.routes[source.id];
+    if (!settings?.enabled || !destinationId) {
       restoreControl(control);
       return;
     }
@@ -90,14 +87,26 @@
     control.title = linkTitle;
   }
 
+  function controlSelector() {
+    const selectors = [ImageSources.controlSelector];
+    if (source?.selector) {
+      selectors.push(source.selector);
+    }
+    return selectors.join(", ");
+  }
+
   function updateControls() {
     scanScheduled = false;
+    if (settings) {
+      source = ImageSearch.customSourceFor(window.location.href, settings)
+        || ImageSearch.engineForHost(window.location.hostname);
+    }
     for (const control of managedControls.keys()) {
       if (!control.isConnected) {
         restoreControl(control);
       }
     }
-    for (const control of document.querySelectorAll(ImageSources.controlSelector)) {
+    for (const control of document.querySelectorAll(controlSelector())) {
       updateControl(control);
     }
   }
@@ -116,7 +125,7 @@
     if (event.type === 'auxclick' && event.button !== 1) {
       return;
     }
-    const control = event.target.closest(ImageSources.controlSelector);
+    const control = event.target.closest(controlSelector());
     if (!control) {
       return;
     }

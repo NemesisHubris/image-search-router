@@ -8,9 +8,12 @@
 * {
   box-sizing: border-box;
 }
+[hidden] {
+  display: none !important;
+}
 
 body {
-  width: 380px;
+  width: 400px;
   max-height: 600px;
   overflow-y: auto;
   margin: 0;
@@ -19,45 +22,44 @@ body {
 header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 22px 22px 20px;
+  gap: 10px;
+  padding: 20px;
   border-bottom: 1px solid #dedfd8;
 }
 
-h1 {
+h1, h2 {
   margin: 0;
-  font-size: 17px;
   font-weight: 650;
+}
+h1 {
+  font-size: 16px;
   letter-spacing: -0.3px;
 }
-
+h2 {
+  margin-bottom: 16px;
+  font-size: 14px;
+}
 header p {
   margin: 3px 0 0;
   color: #666e66;
-  font-size: 12px;
+  font-size: 11px;
 }
-
 main {
-  padding: 18px 22px 22px;
+  padding: 20px;
 }
 
 .toggle-row {
   position: relative;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 32px;
+  margin-left: auto;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
 }
 
-/* The real checkbox remains focusable and accessible to keyboard users. */
+/* Keep the native checkbox available to keyboard and screen-reader users. */
 input[type="checkbox"] {
   position: absolute;
-  right: 0;
-  width: 44px;
-  height: 28px;
+  width: 38px;
+  height: 24px;
   margin: 0;
   opacity: 0;
   cursor: pointer;
@@ -65,8 +67,8 @@ input[type="checkbox"] {
 
 .switch-track {
   pointer-events: none;
-  width: 44px;
-  height: 26px;
+  width: 38px;
+  height: 24px;
   padding: 4px;
   border-radius: 5px;
   background: #747b74;
@@ -75,186 +77,150 @@ input[type="checkbox"] {
 .switch-track::before {
   content: "";
   display: block;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 2px;
-  background: #ffffff;
+  background: white;
 }
 
 input:checked + .switch-track {
   background: #244d3e;
 }
-
 input:checked + .switch-track::before {
-  transform: translateX(18px);
-}
-
-input:focus-visible + .switch-track {
-  outline: 2px solid #244d3e;
-  outline-offset: 3px;
-}
-
-input:disabled + .switch-track {
-  opacity: 0.5;
-}
-
-#status {
-  margin: 10px 0 0;
-  color: #626a62;
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.engine-choice {
-  margin-top: 20px;
-}
-
-.engine-choice label,
-form label {
-  display: block;
-  margin-bottom: 7px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-select,
-input[type="url"] {
-  width: 100%;
-  min-height: 38px;
-  padding: 8px 10px;
-  border: 1px solid #bdc3ba;
-  border-radius: 4px;
-  color: inherit;
-  background: #ffffff;
-  font: inherit;
-  font-size: 13px;
+  transform: translateX(14px);
 }
 
 select:focus-visible,
-input[type="url"]:focus-visible,
-button:focus-visible {
+input:focus-visible,
+button:focus-visible,
+summary:focus-visible,
+input:focus-visible + .switch-track {
   outline: 2px solid #244d3e;
   outline-offset: 2px;
 }
 
-form {
-  margin-top: 16px;
-}
-
-#custom-help,
-#error {
-  margin: 8px 0 0;
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-#custom-help {
-  color: #626a62;
-}
-
-#error {
-  color: #a02c24;
-}
-
-button {
-  margin-top: 12px;
-  padding: 9px 14px;
-  border: 0;
-  border-radius: 4px;
-  color: #ffffff;
-  background: #244d3e;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-button:disabled,
-select:disabled {
-  opacity: 0.5;
-}
-
-.column-labels,
-.route-row {
+.column-labels, .route-row {
   display: grid;
-  grid-template-columns: 120px minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) 18px minmax(0, 1fr) 24px;
+  gap: 6px;
   align-items: center;
 }
 
 .column-labels {
-  margin: 18px 0 8px;
+  margin-bottom: 8px;
   color: #626a62;
   font-size: 11px;
 }
-
-#routes {
-  max-height: 290px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  padding-right: 4px;
-}
-
 .route-row {
-  min-height: 46px;
-  font-size: 13px;
-  font-weight: 600;
+  margin-bottom: 8px;
+}
+.route-arrow {
+  text-align: center;
+  color: #747b74;
 }
 
-#custom-section {
+select, input[type="url"], input[type="text"] {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px;
+  border: 1px solid #bdc3ba;
+  border-radius: 4px;
+  color: inherit;
+  background: white;
+  font: inherit;
+  font-size: 12px;
+}
+
+button {
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 4px;
+  color: white;
+  background: #244d3e;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:disabled, select:disabled, input:disabled {
+  opacity: 0.5;
+}
+.remove-route {
+  padding: 5px;
+  font-size: 20px;
+  font-weight: 400;
+}
+.quiet, .remove-route {
+  color: #626a62;
+  background: transparent;
+}
+.add-route {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 12px;
+  border: 1px solid #dedfd8;
+  color: #244d3e;
+  background: transparent;
+}
+.add-route span {
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 16px;
+}
+.add-route:hover, .quiet:hover, .remove-route:hover {
+  background: #eeefe9;
+}
+#status, .help, #error {
+  margin: 12px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+}
+#status, .help {
+  color: #626a62;
+}
+#error {
+  color: #a02c24;
+}
+#custom-editor, #custom-section {
   border-top: 1px solid #dedfd8;
   margin-top: 18px;
   padding-top: 16px;
 }
-
-summary {
-  cursor: pointer;
-  font-size: 13px;
+form label {
+  display: block;
+  margin: 12px 0 6px;
+  font-size: 12px;
   font-weight: 600;
 }
-
-input[type="text"] {
-  width: 100%;
-  min-height: 38px;
-  padding: 8px 10px;
-  border: 1px solid #bdc3ba;
-  border-radius: 4px;
-  color: inherit;
-  background: #ffffff;
-  font: inherit;
-  font-size: 13px;
-  margin-bottom: 12px;
+.form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
 }
-
+summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: #626a62;
+}
+#source-options {
+  margin-top: 12px;
+}
 #custom-engines {
   padding: 0;
   margin: 8px 0 0;
   list-style: none;
 }
-
 #custom-engines li {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  font-size: 13px;
-}
-
-#custom-engines li span {
-  overflow-wrap: anywhere;
-}
-
-.remove-engine {
-  flex-shrink: 0;
-  margin-top: 0;
-  padding: 8px 0 8px 10px;
-  color: #626a62;
-  background: transparent;
+  gap: 10px;
   font-size: 12px;
 }
-
-summary:focus-visible,
-input[type="text"]:focus-visible {
-  outline: 2px solid #244d3e;
-  outline-offset: 2px;
+#custom-engines li span {
+  overflow-wrap: anywhere;
 }

@@ -10,35 +10,52 @@
   </head>
   <body>
     <header>
-      <img src="icons/icon.svg" width="40" height="40" alt="">
+      <img src="icons/icon.svg" width="36" height="36" alt="">
       <div>
         <h1>Image Search Router</h1>
         <p>Your search. Your image engine.</p>
       </div>
-    </header>
-    <main>
-      <label class="toggle-row">
-        <span>Enable routing</span>
-        <input id="enabled" type="checkbox" role="switch" aria-describedby="status" disabled>
+      <label class="toggle-row" title="Enable routing">
+        <input id="enabled" type="checkbox" role="switch" aria-label="Enable routing" disabled>
         <span class="switch-track" aria-hidden="true"></span>
       </label>
-      <p id="status" role="status">Loading your choices…</p>
+    </header>
+    <main>
       <div class="column-labels" aria-hidden="true">
-        <span>When searching on</span><span>Open images with</span>
+        <span>Searching on</span><span></span><span>Open images with</span>
       </div>
-      <div id="routes" aria-label="Image search destinations"></div>
-      <details id="custom-section">
-        <summary>Custom image engines</summary>
-        <ul id="custom-engines"></ul>
+      <div id="routes" aria-label="Image search routes"></div>
+      <button id="add-route" class="add-route" type="button" disabled>
+        <span aria-hidden="true">+</span> Add route
+      </button>
+      <p id="status" role="status">Loading your choices…</p>
+      <section id="custom-editor" hidden aria-labelledby="editor-title">
+        <h2 id="editor-title">Custom engine</h2>
         <form id="custom-form" novalidate>
           <label for="custom-name">Name</label>
-          <input id="custom-name" type="text" maxlength="40" placeholder="My image search" required>
+          <input id="custom-name" type="text" maxlength="40" placeholder="My search engine" required>
+          <div id="source-fields" hidden>
+            <label for="custom-source-url">Web search URL</label>
+            <input id="custom-source-url" type="url" placeholder="https://search.example.com/?q={query}">
+          </div>
           <label for="custom-url">Image search URL</label>
-          <input id="custom-url" type="url" placeholder="https://example.com/images?q={query}"
-            aria-describedby="custom-help error" autocomplete="off" spellcheck="false" required>
-          <p id="custom-help">Put <code>{query}</code> where the search words go.</p>
-          <button type="submit">Add engine</button>
+          <input id="custom-url" type="url" placeholder="https://search.example.com/images?q={query}" required>
+          <p class="help">Replace the search words in each URL with <code>{query}</code>.</p>
+          <details id="source-options" hidden>
+            <summary>Advanced</summary>
+            <label for="custom-selector">Images button selector (optional)</label>
+            <input id="custom-selector" type="text" placeholder="e.g. #images-tab">
+            <p class="help">For sites whose Images button is not a normal navigation link.</p>
+          </details>
+          <div class="form-actions">
+            <button type="submit">Save engine</button>
+            <button id="cancel-custom" class="quiet" type="button">Cancel</button>
+          </div>
         </form>
+      </section>
+      <details id="custom-section" hidden>
+        <summary>Saved custom engines</summary>
+        <ul id="custom-engines"></ul>
       </details>
       <p id="error" role="alert" hidden></p>
     </main>
