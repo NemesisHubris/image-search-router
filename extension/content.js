@@ -3,12 +3,12 @@
 
   // Only change the top search tabs. Image thumbnails and result links stay intact.
   const searchTabSelector = "#primary-tabs a[href]";
-  const linkTitle = "Search Google Images (opens in a new tab)";
+  const linkTitle = "Search images with your chosen engine (opens in a new tab)";
 
   // Remember the original attributes so switching off requires no page reload.
   const originalLinks = new WeakMap();
-  let enabled = false;
-  let settingChanged = false;
+  let settings = { ...ImageSearch.defaults, enabled: false };
+  const changedSettings = new Set();
 
   function restoreAttribute(link, name, originalValue, extensionValue) {
     // Preserve any attribute Brave has changed since we last touched the link.
@@ -30,22 +30,22 @@
       return;
     }
 
-    restoreAttribute(link, "href", original.href, original.googleHref);
+    restoreAttribute(link, "href", original.href, original.destinationHref);
     restoreAttribute(link, "target", original.target, "_blank");
     restoreAttribute(link, "rel", original.rel, "noopener noreferrer");
     restoreAttribute(link, "title", original.title, linkTitle);
     originalLinks.delete(link);
   }
 
-  function useGoogleImages(link) {
-    if (!enabled) {
+  function useSelectedEngine(link) {
+    if (!settings.enabled) {
       restoreBraveLink(link);
       return;
     }
 
     const previous = originalLinks.get(link);
 
-    if (previous && link.href === previous.googleHref) {
+    if (previous && link.href === previous.destinationHref) {
       return;
     }
 
@@ -70,9 +70,14 @@
       return;
     }
 
-    const googleUrl = new URL("https://www.google.com/search");
-    googleUrl.searchParams.set("q", query);
-    googleUrl.searchParams.set("udm", "2");
+    let destination;
+
+    try {
+      destination = ImageSearch.destinationFor(query, settings);
+    } catch {
+      restoreBraveLink(link);
+      return;
+    }
 
     // When Brave updates the query on an existing link, save the new Brave URL
     // while retaining the original target, rel, and title attributes.
@@ -82,10 +87,10 @@
       title: link.getAttribute("title")
     };
     original.href = link.getAttribute("href");
-    original.googleHref = googleUrl.href;
+    original.destinationHref = destination;
     originalLinks.set(link, original);
 
-    link.href = googleUrl.href;
+    link.href = destination;
     link.target = "_blank";
     link.rel = "noopener noreferrer";
     link.title = linkTitle;
@@ -95,12 +100,12 @@
     const searchTabs = document.querySelectorAll(searchTabSelector);
 
     for (const link of searchTabs) {
-      useGoogleImages(link);
+      useSelectedEngine(link);
     }
   }
 
   function keepNativeTabOpening(event) {
-    if (!enabled) {
+    if (!settings.enabled) {
       return;
     }
 
@@ -115,19 +120,10 @@
     }
 
     // Handle a click even if Brave has just replaced the link.
-    useGoogleImages(link);
+    useSelectedEngine(link);
+    const original = originalLinks.get(link);
 
-    const destination = new URL(link.href);
-
-    if (destination.origin !== "https://www.google.com") {
-      return;
-    }
-
-    if (destination.pathname !== "/search") {
-      return;
-    }
-
-    if (destination.searchParams.get("udm") !== "2") {
+    if (!original || link.href !== original.destinationHref) {
       return;
     }
 
@@ -150,22 +146,39 @@
   });
 
   chrome.storage.onChanged.addListener((changes, areaName) => {
-    if (areaName !== "local" || !changes.enabled) {
+    if (areaName !== "local") {
       return;
     }
 
-    settingChanged = true;
-    enabled = changes.enabled.newValue !== false;
+    const changedKeys = Object.keys(ImageSearch.defaults).filter((key) => key in changes);
+
+    if (changedKeys.length === 0) {
+      return;
+    }
+
+    // Restore the saved Brave URLs before applying a different engine.
+    for (const link of document.querySelectorAll(searchTabSelector)) {
+      restoreBraveLink(link);
+    }
+
+    for (const key of changedKeys) {
+      changedSettings.add(key);
+      settings[key] = changes[key].newValue ?? ImageSearch.defaults[key];
+    }
+
     updateSearchTabs();
   });
 
-  chrome.storage.local.get({ enabled: true }).then((settings) => {
+  chrome.storage.local.get(ImageSearch.defaults).then((savedSettings) => {
     // A toggle made during startup takes priority over this initial read.
-    if (!settingChanged) {
-      enabled = settings.enabled !== false;
-      updateSearchTabs();
+    for (const key of Object.keys(ImageSearch.defaults)) {
+      if (!changedSettings.has(key)) {
+        settings[key] = savedSettings[key];
+      }
     }
+
+    updateSearchTabs();
   }).catch((error) => {
-    console.warn("Google Images could not read its on/off setting.", error);
+    console.warn("Image Search could not read its settings.", error);
   });
 })();

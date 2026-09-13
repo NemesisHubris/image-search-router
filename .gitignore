@@ -7,3 +7,4 @@ artifacts/
 *-headers.txt
 *-response.html
 *.zip
+.local-checks/

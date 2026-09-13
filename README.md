@@ -1,25 +1,29 @@
-# Google Images for Brave Search
+# Image Search for Brave
 
-Click **Images** in Brave Search to open Google Images in a new tab.
-Your Brave results stay open. Includes a toolbar icon and a saved on/off switch.
+Brave's image results can be frustrating. This extension gives you an alternative
+without giving up Brave Search.
+
+Click **Images** to search with **Google, Bing, DuckDuckGo, Yahoo, Yandex,
+Startpage, or your own engine**. Results open in a new tab, keeping Brave open.
+The toolbar popup lets you pick an engine or switch the extension off.
 
 ## Install
 
-1. [Download the extension ZIP](https://github.com/NemesisHubris/brave-google-images/releases/latest/download/brave-google-images.zip) and unzip it.
+1. [Download the ZIP](https://github.com/NemesisHubris/brave-google-images/releases/latest/download/brave-google-images.zip) and unzip it.
 2. Open `brave://extensions` and enable **Developer mode**.
-3. Click **Load unpacked** and select the unzipped folder containing `manifest.json`.
-4. Refresh Brave Search. Pin the extension icon to access the toggle.
+3. Click **Load unpacked** and select the folder containing `manifest.json`.
+4. Refresh Brave Search. Pin the extension icon to choose your engine.
 
-If you clone this repository, load the `extension` folder instead.
+Cloned the repo? Load the `extension` folder.
 After updating, reload the extension and refresh Brave Search.
 
-## Test
+## Your own engine
 
-```sh
-npm ci
-npx playwright install chromium
-npm test
+Choose **Custom…**, paste an image-search URL, and click **Save engine**.
+Use `{query}` where the search words go, for example:
+
+```text
+https://www.bing.com/images/search?q={query}
 ```
 
-15 headless Chromium tests pass. Google may still show its own CAPTCHA.
-See [TESTING.md](TESTING.md) for details.
+Your choice is saved. Search engines may still show their own CAPTCHA.
