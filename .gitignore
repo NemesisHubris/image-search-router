@@ -1,0 +1,9 @@
+node_modules/
+.npm-cache/
+.tmp/
+test-results/
+playwright-report/
+artifacts/
+*-headers.txt
+*-response.html
+*.zip

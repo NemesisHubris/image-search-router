@@ -1,0 +1,104 @@
+:root {
+  color-scheme: light;
+  font-family: system-ui, sans-serif;
+  color: #202923;
+  background: #faf9f6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  width: 320px;
+  margin: 0;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 22px 22px 20px;
+  border-bottom: 1px solid #dedfd8;
+}
+
+h1 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.3px;
+}
+
+header p {
+  margin: 3px 0 0;
+  color: #666e66;
+  font-size: 12px;
+}
+
+main {
+  padding: 18px 22px 22px;
+}
+
+.toggle-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 32px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* The real checkbox remains focusable and accessible to keyboard users. */
+input {
+  position: absolute;
+  right: 0;
+  width: 44px;
+  height: 28px;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.switch-track {
+  pointer-events: none;
+  width: 44px;
+  height: 26px;
+  padding: 4px;
+  border-radius: 5px;
+  background: #747b74;
+}
+
+.switch-track::before {
+  content: "";
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 2px;
+  background: #ffffff;
+}
+
+input:checked + .switch-track {
+  background: #244d3e;
+}
+
+input:checked + .switch-track::before {
+  transform: translateX(18px);
+}
+
+input:focus-visible + .switch-track {
+  outline: 2px solid #244d3e;
+  outline-offset: 3px;
+}
+
+input:disabled + .switch-track {
+  opacity: 0.5;
+}
+
+#status {
+  margin: 10px 0 0;
+  color: #626a62;
+  font-size: 12px;
+  line-height: 1.5;
+}

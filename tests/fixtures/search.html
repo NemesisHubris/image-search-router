@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Brave Search test fixture</title>
+  </head>
+  <body>
+    <nav class="tabs">
+      <!-- This navigation structure matches Brave Search on September 13, 2026. -->
+      <ul id="primary-tabs">
+        <li><a id="all" href="/search?q=red+panda">All</a></li>
+        <li><a id="images" href="/images?q=red+panda&amp;source=web"><span>Images</span></a></li>
+        <li><a id="videos" href="/videos?q=red+panda">Videos</a></li>
+      </ul>
+    </nav>
+    <main>
+      <a id="thumbnail" href="/images?q=red+panda&amp;context=preview">Image preview</a>
+      <a id="result" href="https://example.com/">Search result</a>
+    </main>
+    <script>
+      // Simulate a page router that would otherwise navigate the existing tab.
+      document.addEventListener("click", (event) => {
+        const link = event.target.closest("#primary-tabs a");
+
+        if (!link) {
+          return;
+        }
+
+        event.preventDefault();
+        window.location.href = link.href;
+      });
+    </script>
+  </body>
+</html>
